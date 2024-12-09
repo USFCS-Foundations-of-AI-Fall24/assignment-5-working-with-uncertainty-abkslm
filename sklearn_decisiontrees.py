@@ -1,28 +1,66 @@
-
-from sklearn.datasets import load_iris
-from sklearn import tree
-from sklearn.model_selection import KFold
-from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
-import pandas as pd
-from sklearn.model_selection import GridSearchCV, KFold
 import joblib
-
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_wine
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV, KFold
 
 ### This code shows how to use KFold to do cross_validation.
 ### This is just one of many ways to manage training and test sets in sklearn.
 
-iris = load_iris()
-X, y = iris.data, iris.target
+wine = load_wine()
+X, y = wine.data, wine.target
 scores = []
 kf = KFold(n_splits=5)
-for train_index, test_index in kf.split(X) :
-    X_train, X_test, y_train, y_test = \
-        (X[train_index], X[test_index], y[train_index], y[test_index])
-    clf = tree.DecisionTreeClassifier()
-    clf.fit(X_train, y_train)
-    scores.append(clf.score(X_test, y_test))
 
-print(scores)
+rf_results = []
+for n_estimators in [10, 25, 50]:
+    for criterion in ["gini", "entropy"]:
+        clf = RandomForestClassifier(n_estimators=n_estimators, criterion=criterion, random_state=42)
+        accuracies = []
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict(X_test)
+            accuracies.append(accuracy_score(y_test, y_pred))
+        mean_accuracy = np.mean(accuracies)
+        rf_results.append({
+            "n_estimators": n_estimators,
+            "criterion": criterion,
+            "mean_accuracy": mean_accuracy
+        })
+
+param_grid_rf = {
+    "n_estimators": [5, 10, 15, 20],
+    "criterion": ["gini", "entropy"]
+}
+rf_model = RandomForestClassifier(random_state=42)
+grid_rf = GridSearchCV(estimator=rf_model, param_grid=param_grid_rf, cv=5)
+grid_rf.fit(X, y)
+
+param_grid_hgb = {
+    "max_iter": [25, 50, 75, 100]
+}
+hgb_model = HistGradientBoostingClassifier(random_state=42)
+grid_hgb = GridSearchCV(estimator=hgb_model, param_grid=param_grid_hgb, cv=5)
+grid_hgb.fit(X, y)
+
+results = pd.DataFrame({
+    "Model": ["Random Forest", "Histogram Boosting"],
+    "Best Parameters": [grid_rf.best_params_, grid_hgb.best_params_],
+    "Best Score": [grid_rf.best_score_, grid_hgb.best_score_]
+})
+
+print(f"Random Forest Results:")
+for result in rf_results:
+    print(f"\tn_estimators: {result["n_estimators"]}\n"
+          f"\tcriterion: {result["criterion"]}\n"
+          f"\tmean_accuracy: {result["mean_accuracy"]}\n"
+          )
+
+print(f"GridSearchCV Results:\n{results}")
 
 ## Part 2. This code (from https://scikit-learn.org/1.5/auto_examples/ensemble/plot_forest_hist_grad_boosting_comparison.html)
 ## shows how to use GridSearchCV to do a hyperparameter search to compare two techniques.

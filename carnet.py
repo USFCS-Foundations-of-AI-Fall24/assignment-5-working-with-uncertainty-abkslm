@@ -1,5 +1,5 @@
-from pgmpy.models import BayesianNetwork
 from pgmpy.inference import VariableElimination
+from pgmpy.models import BayesianNetwork
 
 car_model = BayesianNetwork(
     [
@@ -65,6 +65,57 @@ cpd_moves = TabularCPD(
 car_model.add_cpds( cpd_starts, cpd_ignition, cpd_gas, cpd_radio, cpd_battery, cpd_moves)
 
 car_infer = VariableElimination(car_model)
+
+print("\nQuery1: P(Battery | CarMoves = No)")
+print(car_infer.query(variables=["Battery"], evidence={"Moves": "no"}))
+
+print("\nQuery2: P(CarStarts | Radio = Doesn't turn on)")
+print(car_infer.query(variables=["Starts"], evidence={"Radio": "Doesn't turn on"}))
+
+print("\nQuery3: P(Radio | Battery = Works, Gas = Yes) vs P(Radio | Batters = Works)")
+prob_radio_w_gas = car_infer.query(variables=["Radio"], evidence={"Battery": "Works", "Gas": "Full"})
+prob_radio_wo_gas = car_infer.query(variables=["Radio"], evidence={"Battery": "Works", "Gas": "Empty"})
+print(f"With Gas: {prob_radio_w_gas}")
+print(f"Without Gas: {prob_radio_wo_gas}")
+
+print("\nQuery5: P(CarStarts | Radio = turns on, Gas = Full")
+print(car_infer.query(variables=["Starts"], evidence={"Radio": "turns on", "Gas": "Full"}))
+
+cpd_keypresent = TabularCPD(
+    variable="KeyPresent",
+    variable_card=2,
+    values=[[0.7], [0.3]],
+    state_names={"KeyPresent": ["yes", "no"]}
+)
+
+cpd_starts_updated = TabularCPD(
+    variable="Starts",
+    variable_card=2,
+    values=[
+        [0.99, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
+        [0.01, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99]
+    ],
+    evidence=["Ignition", "Gas", "KeyPresent"],
+    evidence_card=[2, 2, 2],
+    state_names={
+        "Starts": ["yes", "no"],
+        "Ignition": ["Works", "Doesn't work"],
+        "Gas": ["Full", "Empty"],
+        "KeyPresent": ["yes", "no"]
+    }
+)
+
+car_model.add_node("KeyPresent")
+car_model.add_edge("KeyPresent", "Starts")
+car_model.remove_cpds(cpd_starts)
+car_model.add_cpds(cpd_keypresent, cpd_starts_updated)
+
+assert car_model.check_model()
+
+car_infer = VariableElimination(car_model)
+
+print("\nQuery6: P(KeyPresent | CarMoves = no)")
+print(car_infer.query(variables=["KeyPresent"], evidence={"Moves": "no"}))
 
 print(car_infer.query(variables=["Moves"],evidence={"Radio":"turns on", "Starts":"yes"}))
 
