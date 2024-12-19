@@ -1,0 +1,62 @@
+Assignment 5 Comments:
+
+sklearn:
+
+new dataset. 5/5
+
+random forest 5/5
+
+GridSearchCV 5/5
+
+Scatterplot 5/5
+
+Belief Networks:
+
+alarm queries 5/5
+
+car queries 5/5
+
+additional node 5/5
+
+HMM:
+
+load 5/5
+
+generate 10/10
+
+lander models 5/5
+
+forward 7/10
+I get an error with the lander code.
+Traceback (most recent call last):
+  File "/Users/cbrooks/courses/Fall24/CS362/student_repos/assignment5/assignment-5-working-with-uncertainty-submissions/assignment-5-working-with-uncertainty-abkslm/HMM.py", line 207, in <module>
+    most_probable_state, prob = hmm.forward(args.forward)
+  File "/Users/cbrooks/courses/Fall24/CS362/student_repos/assignment5/assignment-5-working-with-uncertainty-submissions/assignment-5-working-with-uncertainty-abkslm/HMM.py", line 116, in forward
+    transition_contributions = [
+  File "/Users/cbrooks/courses/Fall24/CS362/student_repos/assignment5/assignment-5-working-with-uncertainty-submissions/assignment-5-working-with-uncertainty-abkslm/HMM.py", line 117, in <listcomp>
+    alpha[t - 1][prev_state] * self.transitions[prev_state].get(state, 0)
+KeyError: '1,2'
+
+
+viterbi 15/15
+
+Utility:
+
+q1 5/5
+
+q2 5/5
+
+q3 2/2
+
+q4 3/3
+
+q5 2/2
+
+q6 3/3
+
+-5 late
+
+92/100
+
+
+
